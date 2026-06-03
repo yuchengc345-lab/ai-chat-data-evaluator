@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
   Bar,
@@ -17,11 +18,30 @@ import { loadAnalysis } from "../../lib/browser-storage.js";
 
 export default function DashboardPage() {
   const [analysis, setAnalysis] = useState(null);
+  const [loadError, setLoadError] = useState("");
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    setAnalysis(loadAnalysis());
-    setIsLoaded(true);
+    async function load() {
+      const reportId = new URLSearchParams(window.location.search).get("id");
+      if (reportId) {
+        try {
+          const response = await fetch(`/api/reports/${reportId}`);
+          const payload = await response.json();
+          if (!response.ok) throw new Error(payload.error || "讀取報告失敗。");
+          setAnalysis({ ...payload.analysis, reportId: payload.id });
+          setIsLoaded(true);
+          return;
+        } catch (error) {
+          setLoadError(error.message);
+        }
+      }
+
+      setAnalysis(loadAnalysis());
+      setIsLoaded(true);
+    }
+
+    load();
   }, []);
 
   const followUpList = useMemo(() => {
@@ -35,6 +55,7 @@ export default function DashboardPage() {
   if (!analysis) return <EmptyState />;
 
   const metrics = analysis.metrics;
+  const reportHref = analysis.reportId ? `/report?id=${analysis.reportId}` : "/report";
 
   return (
     <div className="space-y-8">
@@ -42,6 +63,20 @@ export default function DashboardPage() {
         <p className="text-sm font-semibold text-teal">Dashboard</p>
         <h1 className="mt-2 text-3xl font-semibold text-ink">聊天數據分析儀表板</h1>
         <p className="mt-2 text-sm text-slate-600">目前行業模板：{analysis.industry?.label || "通用"}</p>
+        {analysis.reportId ? (
+          <p className="mt-1 text-xs text-slate-500">報告 ID：{analysis.reportId}</p>
+        ) : null}
+        {loadError ? (
+          <div className="mt-3 rounded-md border border-amber/30 bg-amber/5 px-3 py-2 text-sm text-amber">
+            {loadError} 已改用本機暫存資料顯示。
+          </div>
+        ) : null}
+        <Link
+          href={reportHref}
+          className="mt-4 inline-flex rounded-md bg-ink px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+        >
+          查看報告
+        </Link>
       </section>
 
       <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

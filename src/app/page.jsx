@@ -53,7 +53,7 @@ export default function UploadPage() {
       const response = await fetch("/api/analyze", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ csv: csvText, industry }),
+        body: JSON.stringify({ csv: csvText, industry, fileName }),
       });
       const payload = await response.json();
 
@@ -62,7 +62,7 @@ export default function UploadPage() {
       }
 
       saveAnalysis(payload);
-      router.push("/dashboard");
+      router.push(payload.reportId ? `/dashboard?id=${payload.reportId}` : "/dashboard");
     } catch (caughtError) {
       setError(caughtError.message);
     } finally {

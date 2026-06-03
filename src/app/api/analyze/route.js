@@ -1,4 +1,5 @@
 import { analyzeRows, parseCsv } from "../../../lib/analysis.js";
+import { createAnalysisReport } from "../../../lib/database.js";
 
 export async function POST(request) {
   try {
@@ -11,7 +12,8 @@ export async function POST(request) {
 
     const rows = parseCsv(csv);
     const analysis = analyzeRows(rows, { industry: body.industry });
-    return json(analysis, 200);
+    const report = await createAnalysisReport(analysis, { fileName: body.fileName });
+    return json({ ...analysis, reportId: report?.id || null }, 200);
   } catch (error) {
     return json({ error: error.message || "分析失敗，請確認 CSV 格式。" }, 400);
   }

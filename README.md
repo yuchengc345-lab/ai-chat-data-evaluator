@@ -55,9 +55,52 @@ npm test
 - UI：Tailwind CSS
 - 圖表：Recharts
 - 分析：`src/lib/analysis.js` 規則引擎
-- 儲存：瀏覽器 `localStorage`
+- 儲存：未設定資料庫時使用瀏覽器 `localStorage`；設定 Supabase 後會保存分析報告
 
-第一版沒有引入資料庫，避免部署和權限複雜度。後續可以把 `localStorage` 換成 SQLite、Supabase 或企業私有資料庫。
+## Supabase 資料庫
+
+這個專案支援 Supabase PostgreSQL。未設定環境變數時，網站會維持原本的 `localStorage` 行為；設定後，每次分析會寫入 `analysis_reports`，並產生可分享的 `reportId` URL。
+
+### 1. 建立資料表
+
+在 Supabase SQL Editor 執行：
+
+```sql
+create extension if not exists "pgcrypto";
+
+create table if not exists public.analysis_reports (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  industry text not null,
+  file_name text,
+  total_conversations integer not null default 0,
+  high_purchase_intent_count integer not null default 0,
+  negative_emotion_count integer not null default 0,
+  requires_follow_up_count integer not null default 0,
+  analysis_json jsonb not null
+);
+
+create index if not exists analysis_reports_created_at_idx
+  on public.analysis_reports (created_at desc);
+
+create index if not exists analysis_reports_industry_idx
+  on public.analysis_reports (industry);
+```
+
+同一份 SQL 也放在 `supabase/schema.sql`。
+
+### 2. 設定 Vercel Environment Variables
+
+在 Vercel Project Settings → Environment Variables 新增：
+
+```text
+SUPABASE_URL
+SUPABASE_SERVICE_ROLE_KEY
+```
+
+`SUPABASE_SERVICE_ROLE_KEY` 只能放在 Vercel 後端環境變數，不要放到前端程式碼或公開聊天裡。
+
+設定後重新部署，`/api/analyze` 會自動把分析結果寫進資料庫，Dashboard / Report 會支援 `?id=<reportId>` 讀取歷史報告。
 
 ## 未來可擴充
 

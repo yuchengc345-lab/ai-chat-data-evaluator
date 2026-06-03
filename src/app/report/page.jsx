@@ -11,11 +11,30 @@ const COLORS = ["#0f766e", "#b45309", "#be123c", "#475569", "#2563eb", "#7c3aed"
 
 export default function ReportPage() {
   const [analysis, setAnalysis] = useState(null);
+  const [loadError, setLoadError] = useState("");
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    setAnalysis(loadAnalysis());
-    setIsLoaded(true);
+    async function load() {
+      const reportId = new URLSearchParams(window.location.search).get("id");
+      if (reportId) {
+        try {
+          const response = await fetch(`/api/reports/${reportId}`);
+          const payload = await response.json();
+          if (!response.ok) throw new Error(payload.error || "讀取報告失敗。");
+          setAnalysis({ ...payload.analysis, reportId: payload.id });
+          setIsLoaded(true);
+          return;
+        } catch (error) {
+          setLoadError(error.message);
+        }
+      }
+
+      setAnalysis(loadAnalysis());
+      setIsLoaded(true);
+    }
+
+    load();
   }, []);
 
   const recommendations = useMemo(() => {
@@ -72,6 +91,14 @@ export default function ReportPage() {
           報告生成時間：{new Date(analysis.generatedAt).toLocaleString("zh-TW")} · 行業模板：
           {analysis.industry?.label || "通用"}
         </p>
+        {analysis.reportId ? (
+          <p className="mt-1 text-xs text-slate-500">報告 ID：{analysis.reportId}</p>
+        ) : null}
+        {loadError ? (
+          <div className="mt-3 rounded-md border border-amber/30 bg-amber/5 px-3 py-2 text-sm text-amber">
+            {loadError} 已改用本機暫存資料顯示。
+          </div>
+        ) : null}
         <button
           type="button"
           onClick={handleExportFollowUp}
