@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getIndustryProfiles } from "../lib/analysis.js";
 import { saveAnalysis } from "../lib/browser-storage.js";
@@ -137,13 +138,21 @@ export default function UploadPage() {
             </div>
           ) : null}
 
-          <button
-            type="submit"
-            disabled={isAnalyzing}
-            className="mt-6 inline-flex min-h-10 items-center rounded-md bg-ink px-5 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isAnalyzing ? "分析中..." : "開始分析"}
-          </button>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <button
+              type="submit"
+              disabled={isAnalyzing}
+              className="inline-flex min-h-10 items-center rounded-md bg-ink px-5 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isAnalyzing ? "分析中..." : "開始分析"}
+            </button>
+            <Link
+              href="/knowledge-assistant"
+              className="inline-flex min-h-10 items-center rounded-md border border-line px-5 py-2 text-sm font-semibold text-slate-700 hover:border-teal hover:text-teal"
+            >
+              查看文件助理 Demo
+            </Link>
+          </div>
         </form>
       </section>
 
