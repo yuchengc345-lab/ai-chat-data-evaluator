@@ -23,6 +23,9 @@ export default function RootLayout({ children }) {
                 <Link className="rounded-md px-3 py-2 text-slate-700 hover:bg-mist" href="/dashboard">
                   Dashboard
                 </Link>
+                <Link className="rounded-md px-3 py-2 text-slate-700 hover:bg-mist" href="/knowledge-assistant">
+                  文件助理
+                </Link>
                 <Link className="rounded-md px-3 py-2 text-slate-700 hover:bg-mist" href="/report">
                   報告
                 </Link>
